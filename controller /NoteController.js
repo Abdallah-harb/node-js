@@ -1,26 +1,42 @@
 var generator = require('../utill/generator')
 var memStorage = require('../utill/memoryStorage');
 var model = require('../model/NoteModel');
+var noteModel = model.Note;
 
 exports.index  = (req,res)=>{
-    var seq1 = generator.generate();
-    memStorage.store.setItem(seq1,"first seq");
-    var seq2 = generator.generate();
-    memStorage.store.setItem(seq2,"second seq");
+    var  [keys,values] = memStorage.getData(memStorage.store);
+   return  res.status(200).json({
+       status:200,
+       message : "all notes",
+       notes: values
+    });
+}
 
-    var noteModel = model.Note;
-    var note = new noteModel(seq1,"bla bla ","bla bla bla ...", "Abdallah", new Date());
+// store note
+exports.store = (req,res)=>{
+    var id = generator.generate();
+    var title = req.body.title;
+    var content = req.body.content;
+    var created_by = "Abdallah";
+    var created_at = new Date();
 
-    var [keys, values] = memStorage.getData(memStorage.store);
+    if(!title || !content){
+      return  res.status(422).json({
+          status:422,
+          message:'title and content is required .'
+      });
+    }
 
-    res.json({
+    var note = new noteModel(id,title,content, created_by, created_at);
+    memStorage.store.setItem(id,note);
+
+    return res.status(200).json({
+        status:200,
+        message: 'Data stored successfully!',
         notes: note
     });
 }
 
-exports.store = (req,res)=>{
-    res.send('Data stored successfully .!');
-}
 
 exports.update = (req,res)=>{
     res.send('Data updated successfully .!');
