@@ -39,9 +39,46 @@ exports.store = (req,res)=>{
 
 
 exports.update = (req,res)=>{
-    res.send('Data updated successfully .!');
+    var { title, content } = req.body;
+    var created_by = "Abdallah";
+    var created_at = new Date();
+
+    if(!title || !content ){
+        return  res.status(422).json({
+            status:422,
+            message:'note  title and content is required .'
+        });
+    }
+
+     var existingNote = memStorage.store.getItem(req.params['id']);
+
+    if(!existingNote){
+        return  res.status(404).json({
+            status:404,
+            message:'Note Not Found  .'
+        });
+    }
+
+    var note = new noteModel(req.params['id'],title,content, created_by, created_at);
+    memStorage.store.setItem(id,note);
+    return res.status(200).json({
+        status:200,
+        message: 'Data updated successfully .!'
+    });
 }
 
 exports.delete = (req,res)=>{
-    res.send('Data deleted successfully .!');
+    var note = memStorage.store.getItem(req.params['id']);
+    if(!note){
+        return  res.status(404).json({
+            status:404,
+            message:'Note Not Found  .'
+        });
+    }
+    memStorage.store.removeItem(req.params['id']);
+
+    return res.status(200).json({
+        status:200,
+        message: 'Data deleted successfully .!'
+    });
 }
