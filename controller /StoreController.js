@@ -1,17 +1,20 @@
 var queries = require('../database/query');
 var db_connection = require('../database/connection');
 
+var Logger = require('../services/logger.sercices');
+const logger = new Logger('StoreController ');
 
 exports.index = async (req,res)=>{
     try {
         var stores = await db_connection.query(queries.storeQuery.index);
-
+        logger.info('all store',stores['rows']);
         return  res.status(200).json({
             status:200,
             message : "all stores",
             stores: stores['rows']
         });
     }catch (e) {
+        logger.error('all store',e.message);
         return  res.status(e.status).json({
             status:e.status,
             message : e.message
