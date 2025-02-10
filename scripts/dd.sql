@@ -190,3 +190,12 @@ ALTER TABLE ONLY public.book
 --
 -- PostgreSQL database dump complete
 --
+
+CREATE TABLE public.audit (
+                              id SERIAL PRIMARY KEY,
+                              action VARCHAR(255) NOT NULL,
+                              model VARCHAR(255) NOT NULL,
+                              info JSONB NOT NULL,
+                              created_by VARCHAR(255) NOT NULL,
+                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

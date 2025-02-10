@@ -4,6 +4,9 @@ var db_connection = require('../database/connection');
 var Logger = require('../services/logger.sercices');
 const logger = new Logger('StoreController ');
 
+var auditServices = require('../services/AuditServices');
+var auditAction = require('../audit/auditAction');
+
 exports.index = async (req,res)=>{
     try {
         var stores = await db_connection.query(queries.storeQuery.index);
@@ -24,6 +27,7 @@ exports.index = async (req,res)=>{
 }
 
 exports.store = async (req,res)=>{
+    const client = await db_connection.getClient();
     try {
         var {name,address} = req.body;
         if(!name || !address){
@@ -35,14 +39,24 @@ exports.store = async (req,res)=>{
         var code = `#_${name.replace(/\s+/g, '').toLowerCase()}${Math.floor(Math.random() * 9000) + 1000}$ab`;
         var values = [name,code,address];
 
+        // Begin transaction
+        await client.query('BEGIN');
         var store = await db_connection.query(queries.storeQuery.store,values);
+        // save activity log
+        //action,model,info
+       await auditServices.prepareAudit(auditAction.auditAction.created,'store',store['rows']);
 
+
+        // Commit transaction
+        await client.query('COMMIT');
         return  res.status(200).json({
             status:200,
             message : "data created successfully",
         });
 
     }catch (e) {
+        logger.error('Save store',e);
+        await client.query('ROLLBACK');
         return  res.status(500).json({
             status:500,
             message : e.message
@@ -78,6 +92,7 @@ exports.update =async (req,res)=>{
         var values = [name,address,req.params['id']];
 
          await db_connection.query(queries.storeQuery.update,values);
+        await auditServices.prepareAudit(auditAction.auditAction.updated,'store',store['rows']);
 
         return  res.status(200).json({
             status:200,
@@ -85,6 +100,7 @@ exports.update =async (req,res)=>{
         });
 
     }catch (e) {
+        logger.error('update store',e.message);
         return  res.status(500).json({
             status:500,
             message : e.message
@@ -99,13 +115,17 @@ exports.delete =async (req,res)=>{
             return  res.status(500).json({status:500, message:'store not found '});
         }
 
-        db_connection.query(queries.storeQuery.delete,[req.params['id']]);
+        await db_connection.query(queries.storeQuery.delete,[req.params['id']]);
+        await auditServices.prepareAudit(auditAction.auditAction.deleted,'store',store['rows']);
+
         return  res.status(200).json({
+
             status:200,
             message : "store Deleted successfully.",
         });
 
     }catch (e) {
+        logger.error('delete',e.message);
         return  res.status(500).json({
             status:500,
             message : e.message

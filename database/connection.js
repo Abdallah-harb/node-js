@@ -10,3 +10,8 @@ exports.query =(queryText,queryParams)=>{
             });
     });
 }
+
+exports.getClient = async () => {
+    return  await pool.connect();
+
+};
