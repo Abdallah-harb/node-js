@@ -3,6 +3,7 @@ var db_connection = require('../database/connection');
 
 var Logger = require('../services/logger.sercices');
 const logger = new Logger('StoreController ');
+const ErrorHandler = require("../Helpier/ErrorHandeler"); // Adjust path as needed
 
 var auditServices = require('../services/AuditServices');
 var auditAction = require('../audit/auditAction');
@@ -69,7 +70,8 @@ exports.update =async (req,res)=>{
         var store = await db_connection.query(queries.storeQuery.find,[req.params['id']]);
 
         if(!store.rows.length > 0){
-            return  res.status(500).json({status:500, message:'store not found '});
+         //   return  res.status(500).json({status:500, message:'store not found '});
+            throw new ErrorHandler("NotFoundError", 404, "Store not found", true);
         }
         var {name,address} = req.body;
         if(!name || !address){
